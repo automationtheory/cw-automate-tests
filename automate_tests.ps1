@@ -1,7 +1,7 @@
 # This script performs automated tests of ConnectWise Automate
 # Author: Jeremy Oaks, Automation Theory, LLC
 
-param([Int]$testComputerID = 0, [Int]$testScriptID = 0, [Int]$testSleepTimeSeconds = 120, [String]$testScriptParams = "")
+param([int]$testComputerID = 0,[int]$testScriptID = 0,[int]$testSleepTimeSeconds = 120,[string]$testScriptParams = "")
 
 ## Test Prep ##
 
@@ -11,33 +11,33 @@ param([Int]$testComputerID = 0, [Int]$testScriptID = 0, [Int]$testSleepTimeSecon
 # Install MySQL Module
 if (!(Get-Module -Name SimplySql))
 {
-Install-Module -Name SimplySql
+	Install-Module -Name SimplySql
 }
 
 # Get LTPoSH
-(new-object Net.WebClient).DownloadString('https://bit.ly/LTPoSh') | iex
+(New-Object Net.WebClient).DownloadString('https://bit.ly/LTPoSh') | Invoke-Expression
 
 # MySQL Connection details
 
 $MySQLPassword = ConvertFrom-LTSecurity (Get-ItemProperty 'HKLM:\SOFTWARE\LabTech\Agent' -Name MysqlPass).MysqlPass
 $MySQLUser = (Get-ItemProperty 'HKLM:\SOFTWARE\LabTech\Agent' -Name User).User
-$MySQLHost =  (Get-ItemProperty 'HKLM:\SOFTWARE\LabTech\Agent' -Name SQLServer).SQLServer
+$MySQLHost = (Get-ItemProperty 'HKLM:\SOFTWARE\LabTech\Agent' -Name SQLServer).SQLServer
 
 # Open Connection
-$MySQLConnection = Open-MySqlConnection -Server $MySQLHost -Database "labtech" -UserName $MySQLUser -Password $MySQLPassword
+$MySQLConnection = Open-MySqlConnection -Server $MySQLHost -Database "labtech" -Username $MySQLUser -Password $MySQLPassword
 
 # Additional items
 $testResultList = New-Object -TypeName 'System.Collections.ArrayList'; # List for results
 
 # Function to put test results into the list
-function log-test ($name, $result)
+function log-test ($name,$result)
 {
-$automateTest = [PSCustomObject]@{
-    Name     	= "$name"
-    Result 		= "$result"
-    }
+	$automateTest = [pscustomobject]@{
+		Name = "$name"
+		Result = "$result"
+	}
 
-$testResultList.Add($automateTest) | Out-Null
+	$testResultList.Add($automateTest) | Out-Null
 
 }
 
@@ -51,11 +51,11 @@ $test1_results = Invoke-SqlQuery -Query "Select count(*) as OnlineCount from com
 
 if ($test1_results.OnlineCount -gt 0)
 {
-log-test "Agent check-in" "Pass"
+	log-test "Agent check-in" "Pass"
 }
 else
 {
-log-test "Agent check-in" "Fail"
+	log-test "Agent check-in" "Fail"
 }
 
 # Test 2: Command execution
@@ -65,9 +65,9 @@ log-test "Agent check-in" "Fail"
 if ($testComputerID -eq 0)
 {
 
-$onlinePC = Invoke-SqlQuery -Query "Select computerID from computers where lastcontact > date_add(now(), interval -5 minute) limit 1;"
+	$onlinePC = Invoke-SqlQuery -Query "Select computerID from computers where lastcontact > date_add(now(), interval -5 minute) limit 1;"
 
-$testComputerID = $onlinePC.computerID
+	$testComputerID = $onlinePC.computerID
 
 }
 
@@ -80,13 +80,13 @@ Start-Sleep -Seconds $testSleepTimeSeconds
 $test2_results = Invoke-SqlQuery -Query "select * from commands where CmdID = $test2_setup;"
 $testComputerName = Invoke-SqlQuery "select name from computers where computerid = $testComputerID;"
 
-if ($test2_results.Output -eq $testComputerName.name)
+if ($test2_results.Output -eq $testComputerName.Name)
 {
-log-test "Command execution" "Pass"
+	log-test "Command execution" "Pass"
 }
 else
 {
-log-test "Command execution" "Fail"
+	log-test "Command execution" "Fail"
 }
 
 
@@ -96,9 +96,9 @@ log-test "Command execution" "Fail"
 
 if ($testScriptID -eq 0)
 {
-$testScriptID = 5034 # This is the default script "Set Alert Maintenance Mode" that will set MM for 15 minutes on the target agent.
+	$testScriptID = 5034 # This is the default script "Set Alert Maintenance Mode" that will set MM for 15 minutes on the target agent.
 
-$testScriptParams = "MinutesForMaintenance=15"
+	$testScriptParams = "MinutesForMaintenance=15"
 }
 
 
@@ -108,17 +108,17 @@ $test3_setup = Invoke-SqlQuery -Query "insert into pendingscripts (ScriptID, Com
 Start-Sleep -Seconds $testSleepTimeSeconds
 
 # Dereference object for MySQL syntax
-[Int] $scriptInstanceID = $test3_setup.scriptid
+[int]$scriptInstanceID = $test3_setup.scriptid
 
 $test3_results = Invoke-SqlQuery -Query "select ScriptStatus from h_scripts where computerid = $testComputerID and ScriptInstanceID = $scriptInstanceID order by hisid desc limit 1;"
 
 if ($test3_results.ScriptStatus -eq 3)
 {
-log-test "Script execution" "Pass"
+	log-test "Script execution" "Pass"
 }
 else
 {
-log-test "Script execution" "Fail"
+	log-test "Script execution" "Fail"
 }
 
 # Test 4: Heartbeat
@@ -128,11 +128,11 @@ $test4_results = Invoke-SqlQuery -Query "Select count(*) as OnlineCount from hea
 
 if ($test4_results.OnlineCount -gt 0)
 {
-log-test "Agent heartbeat" "Pass"
+	log-test "Agent heartbeat" "Pass"
 }
 else
 {
-log-test "Agent heartbeat" "Fail"
+	log-test "Agent heartbeat" "Fail"
 }
 
 # Test 5: Remote Monitors (and variable expansion)
