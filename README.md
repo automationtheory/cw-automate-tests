@@ -16,7 +16,7 @@ or customize the tests:
 
 	.\automate_tests.ps1 -testComputerID 1 -testScriptID 300 -testSleepTimeSeconds 300 -testScriptParams "param=value"
 
-The script will attempt to install the required MySQL module 
+The script will attempt to install the required MySQL module, and administrator permissions are required for this. However, after the module install the script can be run as a normal user.
 
 
 ## How it works
